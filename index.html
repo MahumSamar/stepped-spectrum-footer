@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bring your tabs to life</title>
+<meta name="description" content="Join the waitlist. Currently available on macOS 14+ with M1 chips or later.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f6f6;
+    --ink: #0a0a0a;
+    --muted: #707070;
+
+    --font-sans: "Geist", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-mono: "Geist Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+
+    --mono-size: clamp(0.75rem, 0.55rem + 0.4vw, 1rem);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  /* ---------- Lead-in CTA (sits above the footer so there is something to scroll) ---------- */
+
+  .cta {
+    min-height: 72vh;
+    min-height: 72svh;
+    padding: calc(12vh - 10px) 1.25rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .cta__title {
+    margin: 0;
+    font-weight: 300;
+    font-size: clamp(2.75rem, 1.6rem + 3.05vw, 5.5rem);
+    line-height: 1.095;
+    letter-spacing: -0.035em;
+  }
+
+  .cta__button {
+    margin-top: clamp(2rem, 2.9vw, 3.45rem);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 4.125rem;
+    padding: 0 1.5rem;
+    border-radius: 1.375rem;
+    background: #000;
+    color: #fff;
+    font-size: 1.29rem;
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+  }
+  .cta__button:hover { background: #1c1c1c; transform: translateY(-1px); }
+  .cta__button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  .cta__status {
+    margin: 1.7rem 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    font-size: 1.3125rem;
+    line-height: 1.3;
+  }
+
+  .cta__badge {
+    display: inline-flex;
+    align-items: center;
+    height: 1.6875rem;
+    padding: 0 0.55rem 0 0.7rem;
+    border: 1.5px solid var(--ink);
+    border-radius: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .cta__note {
+    margin: 0.65rem 0 0;
+    font-size: 1.34rem;
+    line-height: 1.3;
+    color: var(--muted);
+  }
+
+  /* ---------- Footer: the 100vh section ---------- */
+
+  .footer {
+    /* --p: scroll progress 0→1, --e: eased progress, --t: px the footer still has to travel.
+       Defaults are the resting state, so the section is complete without JS. */
+    --p: 1;
+    --e: 1;
+    --t: 0;
+    --row: 8.05rem;
+
+    position: relative;
+    height: 100vh;
+    height: 100svh;
+    min-height: 30rem;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: var(--mono-size);
+    line-height: 1.32;
+    letter-spacing: 0.158em;
+    text-transform: uppercase;
+  }
+
+  .footer__credits {
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    padding-top: 3.35rem;
+    text-align: center;
+  }
+
+  .footer__social {
+    position: absolute;
+    z-index: 2;
+    top: var(--row);
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 1.6em;
+  }
+
+  .footer__social a,
+  a.footer__tag { transition: opacity 0.2s ease; }
+  .footer__social a:hover,
+  a.footer__tag:hover { opacity: 0.5; }
+
+  /* Side labels start on the social row and drop into a staircase as the footer scrolls in */
+  .footer__tag {
+    position: absolute;
+    z-index: 2;
+    top: var(--row);
+    white-space: nowrap;
+    transform: translate3d(0, calc(var(--p) * var(--drop)), 0);
+    will-change: transform;
+  }
+  .footer__tag--careers { left: 8.3vw;  --drop: 30vh; }
+  .footer__tag--privacy { left: 15.5vw; --drop: 16vh; }
+  .footer__tag--status  { right: 11.25vw; --drop: 16vh; }
+  .footer__tag--beta    { right: 7.8vw;  --drop: 30vh; }
+
+  /* Stepped spectrum. Pinned to the bottom of the viewport while the footer scrolls in. */
+  .footer__glow {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    transform: translate3d(0, calc(var(--t) * -1px), 0);
+    filter: blur(clamp(9px, 1.15vw, 24px));
+    will-change: transform;
+  }
+
+  .footer__bar {
+    --bleed: 90px;
+    position: absolute;
+    bottom: calc(var(--bleed) * -1);
+    left: var(--x);
+    width: var(--w);
+    height: calc(69.2% * var(--e) * var(--r) + var(--bleed));
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(255, 88, 247, 0) 0%,
+        #fe32eb 19%,
+        #fd1bcf 22.5%,
+        #fb17a1 25.7%,
+        #fb216f 28.9%,
+        #fa2f44 32%,
+        #fa4626 35.2%,
+        #fb6a18 38.4%,
+        #fd9411 41.5%,
+        #fcb817 44.7%,
+        #f9cc2b 47.8%,
+        #f3d449 51%,
+        #e7de99 57.3%,
+        #e1e1c2 60.5%,
+        #d4dee3 63.6%,
+        #bcd2ec 66.8%,
+        #9bbee2 70%,
+        #7aa9d5 73.1%,
+        #5c93cc 76.3%,
+        #4481ca 79.5%,
+        #2f70d4 82.6%,
+        #1e5fdf 85.8%,
+        #1151e0 89%,
+        #0d44cc 92.1%,
+        #113aa8 95.3%,
+        #162d7f 100%
+      ) top / 100% calc(100% - var(--bleed)) no-repeat,
+      linear-gradient(#162d7f, #162d7f) bottom / 100% var(--bleed) no-repeat;
+  }
+
+  .footer__bar:nth-child(1) { --x: -6%;    --w: 14.9%;  --r: 0.496; }
+  .footer__bar:nth-child(2) { --x: 8.9%;   --w: 11.4%;  --r: 0.652; }
+  .footer__bar:nth-child(3) { --x: 20.3%;  --w: 11.25%; --r: 0.795; }
+  .footer__bar:nth-child(4) { --x: 31.55%; --w: 12.25%; --r: 0.888; }
+  .footer__bar:nth-child(5) { --x: 43.8%;  --w: 12.4%;  --r: 1; }
+  .footer__bar:nth-child(6) { --x: 56.2%;  --w: 12.25%; --r: 0.888; }
+  .footer__bar:nth-child(7) { --x: 68.45%; --w: 11.25%; --r: 0.795; }
+  .footer__bar:nth-child(8) { --x: 79.7%;  --w: 11.4%;  --r: 0.652; }
+  .footer__bar:nth-child(9) { --x: 91.1%;  --w: 14.9%;  --r: 0.496; }
+
+  /* ---------- Small screens ---------- */
+
+  @media (max-width: 900px) {
+    .footer__tag--careers { left: 4vw; }
+    .footer__tag--privacy { left: 9vw; }
+    .footer__tag--status  { right: 9vw; }
+    .footer__tag--beta    { right: 4vw; }
+  }
+
+  @media (max-width: 640px) {
+    .cta__button { height: 3.5rem; font-size: 1.0625rem; border-radius: 1.125rem; }
+    .cta__status, .cta__note { font-size: 1.0625rem; }
+    .cta__badge { font-size: 0.8125rem; height: 1.5rem; }
+    .cta__note { max-width: 17rem; }
+
+    .footer { --row: 6.9rem; letter-spacing: 0.12em; }
+    .footer__credits { padding-top: 2.5rem; }
+
+    /* No room for one shared row: side labels start pre-staggered beneath the socials */
+    .footer__tag { top: calc(var(--row) + 3rem + var(--lift, 0rem)); }
+    .footer__tag--careers { left: 1rem;  --lift: 1.9rem; --drop: 19vh; }
+    .footer__tag--privacy { left: 2.25rem; --drop: 9vh; }
+    .footer__tag--status  { right: 2.25rem; --drop: 9vh; }
+    .footer__tag--beta    { right: 1rem; --lift: 1.9rem; --drop: 19vh; }
+
+    .footer__bar { height: calc(60% * var(--e) * var(--r) + var(--bleed)); }
+  }
+
+  @media (max-height: 560px) {
+    .footer__tag--careers, .footer__tag--beta { --drop: 22vh; }
+    .footer__tag--privacy, .footer__tag--status { --drop: 11vh; }
+  }
+</style>
+</head>
+<body>
+
+<main class="cta">
+  <h1 class="cta__title">Bring your tabs<br>to life</h1>
+  <a class="cta__button" href="#">Join the waitlist</a>
+  <p class="cta__status">Dia is currently in <span class="cta__badge">Beta</span></p>
+  <p class="cta__note">Currently available on macOS 14+ with M1 chips or later.</p>
+</main>
+
+<footer class="footer" id="footer">
+  <div class="footer__glow" aria-hidden="true">
+    <span class="footer__bar"></span>
+    <span class="footer__bar"></span>
+    <span class="footer__bar"></span>
+    <span class="footer__bar"></span>
+    <span class="footer__bar"></span>
+    <span class="footer__bar"></span>
+    <span class="footer__bar"></span>
+    <span class="footer__bar"></span>
+    <span class="footer__bar"></span>
+  </div>
+
+  <p class="footer__credits">Designed and built by<br>The Browser Company of New York</p>
+
+  <ul class="footer__social">
+    <li><a href="#">X</a></li>
+    <li><a href="#">Instagram</a></li>
+    <li><a href="#">LinkedIn</a></li>
+  </ul>
+
+  <a class="footer__tag footer__tag--careers" href="#">Careers</a>
+  <a class="footer__tag footer__tag--privacy" href="#">Privacy Policy</a>
+  <span class="footer__tag footer__tag--status">Current status:</span>
+  <span class="footer__tag footer__tag--beta">Beta</span>
+</footer>
+
+<script>
+  (function () {
+    var footer = document.getElementById('footer');
+    if (!footer) return;
+
+    var START = 0.777; // footer top this far down the viewport = animation start
+    var ticking = false;
+
+    function update() {
+      ticking = false;
+      var vh = window.innerHeight;
+      var top = Math.max(0, footer.getBoundingClientRect().top);
+      var p = Math.min(1, Math.max(0, 1 - top / (vh * START)));
+      footer.style.setProperty('--p', p.toFixed(4));
+      footer.style.setProperty('--e', Math.max(0, (p - 0.06) / 0.94).toFixed(4));
+      footer.style.setProperty('--t', top.toFixed(1));
+    }
+
+    function request() {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    }
+
+    window.addEventListener('scroll', request, { passive: true });
+    window.addEventListener('resize', request);
+    update();
+  })();
+</script>
+</body>
+</html>
